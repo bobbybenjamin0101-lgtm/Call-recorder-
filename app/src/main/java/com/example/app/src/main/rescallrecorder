@@ -1,0 +1,333 @@
+XML
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.callrecorder">
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" /><uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" /> <!-- Android 14+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /><application ...>
+        <!-- Declare the Service and Receiver -->
+        <service android:name=".RecordingService" android:foregroundServiceType="microphone" />
+        <receiver android:name=".CallReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.telephony.TelephonyManager
+import android.os.Build
+import android.telephony.TelephonyCallback
+
+class CallReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == TelephonyManager.ACTION_PHONE_STATE_CHANGED) {
+            val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
+
+            when (state) {A
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.callrecorder">
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" /> <!-- Android 14+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application ...>
+        <!-- Declare the Service and Receiver -->
+        <service android:name=".RecordingService" android:foregroundServiceType="microphone" />
+        <receiver android:name=".CallReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
+Step 2: Detect Incoming/Outgoing Calls
+Create a BroadcastReceiver to listen for changes in the phone state.
+
+Note: For Android 12+ (API 31+), PhoneStateListener is deprecated. You should use TelephonyManager.registerTelephonyCallback.
+
+CallReceiver.kt
+
+Kotlin
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.telephony.TelephonyManager
+import android.os.Build
+import android.telephony.TelephonyCallback
+
+class CallReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == TelephonyManager.ACTION_PHONE_STATE_CHANGED) {
+            val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
+
+            when (state) {
+                TelephonyManager.EXTRA_STATE_OFFHOOK -> {
+                    // Call started
+                    val serviceIntent = Intent(context, RecordingService::class.java)
+                    serviceIntent.action = "START_RECORDING"
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(serviceIntent)
+                    } else {
+                        context.startService(serviceIntent)
+                    }
+                }// Call ended
+                    val serviceIntent = Intent(context, RecordingService::class.java)
+                    serviceIntent.action = "STOP_RECORDING"
+                    context.startService(serviceIntent)
+                }
+            }
+        }
+    }
+}
+                TelephonyManager.EXTRA_STATE_IDLE -> {import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Intent
+import android.media.MediaRecorder
+import android.os.Build
+import android.os.Environment
+import android.os.IBinder
+import androidx.core.app.NotificationCompat
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Localeclass RecordingService : Service() {
+
+    private var mediaRecorder: MediaRecorder? = null
+    private var isRecording = false
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        createNotificationChannel()
+        val notification = NotificationCompat.Builder(this, "call_recorder_channel")
+            .setContentTitle("Call Recorder")
+            .setContentText("Recording in progress...")
+            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+            .build()
+        
+        startForeground(1, notification)startForeground(1, notification)
+
+        when (intent?.action) {
+            "START_RECORDING" -> startRecording()
+            "STOP_RECORDING" -> stopRecording()
+        }
+        return START_NOT_STICKY
+    }
+
+    private fun startRecording() {
+        if (isRecording) return
+
+        val fileName = "RecordedCall_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.mp3"
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+        val audioFile = File(storageDir, fileName)mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(this)
+        } else {
+            MediaRecorder()
+        }
+
+        try {
+            mediaRecorder?.apply {
+                // VOICE_COMMUNICATION is the best workaround for non-rooted devices.
+                // It may require the speakerphone to be ON to capture the other person's voice.
+                setAudioSource(MediaRecorder.AudioSource.VOICE_COMMUNICATION)sistant A
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.callrecorder">
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" /> <!-- Android 14+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application ...>
+        <!-- Declare the Service and Receiver -->
+        <service android:name=".RecordingService" android:foregroundServiceType="microphone" />
+        <receiver android:name=".CallReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
+Step 2: Detect Incoming/Outgoing Calls
+Create a BroadcastReceiver to listen for changes in the phone state.
+
+Note: For Android 12+ (API 31+), PhoneStateListener is deprecated. You should use TelephonyManager.registerTelephonyCallback.
+
+CallReceiver.kt
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.telephony.TelephonyManager
+import android.os.Build
+import android.telephony.TelephonyCallback
+
+class CallReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == TelephonyManager.ACTION_PHONE_STATE_CHANGED) {
+            val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
+
+            when (state) {
+                TelephonyManager.EXTRA_STATE_OFFHOOK -> {
+                    // Call started
+                    val serviceIntent = Intent(context, RecordingService::class.java)
+                    serviceIntent.action = "START_RECORDING"
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(serviceIntent)
+                    } else {
+                        context.startService(serviceIntent)
+                    }
+                }
+                TelephonyManager.EXTRA_STATE_IDLE -> {
+                    // Call ended
+                    val serviceIntent = Intent(context, RecordingService::class.java)
+                    serviceIntent.action = "STOP_RECORDING"
+                    context.startService(serviceIntent)
+                }
+            }
+        }
+    }
+}
+Step 3: Create the Foreground Recording Service
+Android requires apps that record in the background to show a persistent notification (Foreground Service).
+
+RecordingService.kt
+
+Kotlin
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Intent
+import android.media.MediaRecorder
+import android.os.Build
+import android.os.Environment
+import android.os.IBinder
+import androidx.core.app.NotificationCompat
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+class RecordingService : Service() {
+
+    private var mediaRecorder: MediaRecorder? = null
+    private var isRecording = false
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        createNotificationChannel()
+        val notification = NotificationCompat.Builder(this, "call_recorder_channel")
+            .setContentTitle("Call Recorder")
+            .setContentText("Recording in progress...")
+            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+            .build()
+        
+        startForeground(1, notification)
+
+        when (intent?.action) {
+            "START_RECORDING" -> startRecording()
+            "STOP_RECORDING" -> stopRecording()
+        }
+        return START_NOT_STICKY
+    }
+
+    private fun startRecording() {
+        if (isRecording) return
+
+        val fileName = "RecordedCall_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.mp3"
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+        val audioFile = File(storageDir, fileName)
+
+        mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(this)
+        } else {
+            MediaRecorder()
+        }
+
+        try {
+            mediaRecorder?.apply {
+                // VOICE_COMMUNICATION is the best workaround for non-rooted devices.
+                // It may require the speakerphone to be ON to capture the other person's voice.
+                setAudioSource(MediaRecorder.AudioSource.VOICE_COMMUNICATION) 
+                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                setOutputFile(audioFile.absolutePath)
+                prepare()
+                start()
+                isRecording = true
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun stopRecording() {
+        if (isRecording) {
+            try {
+                mediaRecorder?.apply {
+                    stop()
+                    release()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            mediaRecorder = null
+            isRecording = false
+        }
+        stopForeground(true)
+        stopSelf()
+    }
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "call_recorder_channel",
+                "Call Recording Service",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        checkPermissions()
+    }private fun checkPermissions() {
+        val permissions = mutableListOf(
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_PHONE_STATE
+        )
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }val notGranted = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (notGranted.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, notGranted.toTypedArray(), 101)
+        }
+    }
+}
